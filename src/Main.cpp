@@ -6,22 +6,31 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
-#include <../include/shaders/shader.h>
+#include <../include/shader.h>
+#include <../include/camera.h>
 
 #include <iostream>
 
 void processInput(GLFWwindow *window);
-
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
+// settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-float mixValue = 0.2f;
+// camera
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+float lastX = SCR_WIDTH / 2.0;
+float lastY = SCR_HEIGHT / 2.0;
+bool firstMouse = true;
 
-bool wireframeMode = false;
+// timing
+float deltaTime = 0.0f; // time between current frame and last frame
+float lastFrame = 0.0f;
+
+float mixValue = 0.2f;
 
 int main(void){
 	if (!glfwInit())
@@ -44,8 +53,11 @@ int main(void){
 	}
 
 	glfwMakeContextCurrent(window);
-	
+	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+	// tell GLFW to capture our mouse
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// if (!gladLoadGL()){ // I guess it's a different way to check on the initialisation of GLAD
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -298,7 +310,13 @@ int main(void){
 	myShader.setInt("texture1", 0);
 	myShader.setInt("texture2", 1);
 
+	
 	while (!glfwWindowShouldClose(window)){
+		// frame logic
+		float currentFrame = static_cast<float>(glfwGetTime());
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+		
 		// inputs
 		processInput(window);
 		
@@ -311,19 +329,17 @@ int main(void){
 		glBindTexture(GL_TEXTURE_2D, texture1);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
-
+		
 		// activate shader
 		myShader.use();
 		myShader.setFloat("mixValue", mixValue);
-
-		// create transformations
-		glm::mat4 view 			= glm::mat4(1.0f);
-		glm::mat4 projection 	= glm::mat4(1.0f);
-		view = glm::translate(view, glm::vec3(-3.0f, -3.0f, -12.0f));
-		projection = glm::perspective(glm::radians(45.0f), (float) SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
-
-		myShader.setMat4("view", view);
+		
+		// camera/view transformations
+		glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float) SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
 		myShader.setMat4("projection", projection);
+
+		glm::mat4 view = camera.GetViewMatrix();
+		myShader.setMat4("view", view);
 
 		// render container
 		glBindVertexArray(VAO);
@@ -350,22 +366,16 @@ int main(void){
 
 void processInput(GLFWwindow *window){
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-	{
 		glfwSetWindowShouldClose(window, true);
-	}
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-	{
-		if(wireframeMode)
-		{
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		}
-		else
-		{
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		}
-		wireframeMode = !wireframeMode;
-	}
+		camera.ProcessKeyboard(FORWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		camera.ProcessKeyboard(BACKWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		camera.ProcessKeyboard(LEFT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		camera.ProcessKeyboard(RIGHT, deltaTime);
 	
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 	{
@@ -382,6 +392,28 @@ void processInput(GLFWwindow *window){
 }
 
 // whenever the window size changes (by OS or user resize) this callback function executes
-void framebuffer_size_callback(GLFWwindow* window, int width, int height){
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
 	glViewport(0, 0, width, height);
+}
+
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+{
+	float xpos = static_cast<float>(xposIn);
+	float ypos = static_cast<float>(yposIn);
+
+	if(firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos -lastX;
+	float yoffset = lastY - ypos;
+	
+	lastX = xpos;
+	lastY = ypos;
+
+	camera.ProcessMouseMovement(xoffset, yoffset);
 }

@@ -5,7 +5,7 @@
 CXX	 = g++
 CC	 = gcc
 
-CXXFLAGS = -std=c++20 -Wall -Wextra -O2 -Iinclude
+CXXFLAGS = -std=c++20 -Wall -Wextra -O2 -Iinclude -Wunused-parameter
 CFLAGS	 = -Wall -Wextra -Iinclude
 LDFLAGS  = -lglfw -lGL -ldl -lm
 
