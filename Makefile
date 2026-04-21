@@ -7,47 +7,39 @@ CC	 = gcc
 
 CXXFLAGS = -std=c++20 -Wall -Wextra -O2 -Iinclude
 CFLAGS	 = -Wall -Wextra -Iinclude
+LDFLAGS  = -lglfw -lGL -ldl -lm
 
-GLFW_FLAGS = $(shell pkg-config --cflags --libs glfw3)
 
-LIBS = -lGL -ldl -lpthread
+SRC_DIR	 = src
+BUILD_DIR = build
+TARGET	 = Engine		# name of the binary 
 
-TARGET	 = RETRO-Engine		# name of the binary 
-SRC_DIR	 = source		# origin source files' folder
-OBJ_DIR	 = build		# origin build files' folder
 
-# ==============================
-# SOURCES
-# ==============================
+SRC  = $(shell find $(SRC_DIR) -name "*.cpp") $(shell find $(SRC_DIR) -name "*.c")
+OBJ  = $(SRC:src/%.cpp=$(BUILD_DIR)/%.o)
+OBJ  := $(OBJ:src/%.c=$(BUILD_DIR)/%.o)
 
-CPP_SOURCE  := $(shell find $(SRC_DIR) -name "*.cpp")
-C_SOURCE    :=  $(shell find $(SRC_DIR) -name "*.c")
 
-CPP_OBJECTS :=  $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(CPP_SOURCES))
-C_OBJECTS   :=  $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(C_SOURCES))
+all: $(BUILD_DIR) $(TARGET)
 
-OBJECTS = $(CPP_OBJECTS) $(C_OBJECTS)
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
-# ==============================
-# RULES
-# ==============================
+$(TARGET): $(OBJ)
+	$(CXX) $(OBJ) $(LDFLAGS) -o $(TARGET)
 
-all: $(TARGET)
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) -c $< $(CXXFLAGS) -o $@
 
-$(TARGET): $(OBJECTS)
-    $(CXX) $(OBJECTS) -o $(TARGET) $(GLFW_FLAGS) $(LIBS)
-
-# Compilar .cpp
-$(OBJ_DIR)/%.o: $(SRC_DIR=/%.cpp
-    @mkdir -p $(dir $@)
-    $(CXX) $(CXXFLAGS) -c $< -o $@
-
-# Compilar .c
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-    @mkdir -p $(dir $@)
-    $(CC) $(CFLAGS) -c $< -o $@
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(dir $@)
+	$(CC) -c $< $(CFLAGS) -o $@
 
 clean: 
-    rm -rf $(OBJ_DIR) $(TARGET)
-	
+	rm -rf $(BUILD_DIR) $(TARGET)
+
+run: $(TARGET)
+	./$(TARGET)
+
 re: clean all

@@ -4,24 +4,24 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <../include/shaders/shader.h>
 
 #include <iostream>
 
-void processInput(GLFWwindow *window){
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, true);
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-}
+void processInput(GLFWwindow *window);
 
-// whenever the window size changes (by OS or user resize) this callback function executes
-void framebuffer_size_callback(GLFWwindow* window, int width, int height){
-	glViewport(0, 0, width, height);
-}
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+
+float mixValue = 0.2f;
+
+bool wireframeMode = false;
 
 int main(void){
 	if (!glfwInit())
@@ -60,10 +60,10 @@ int main(void){
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	float vertices[] = {
 		// positions		// colors			// texture coords
-		0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   2.0f, 2.0f,	// top right
-		0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   2.0f, 0.0f,	// bottom right
+		0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   1.0f, 1.0f,	// top right
+		0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   1.0f, 0.0f,	// bottom right
 	   -0.5f, -0.5f, 0.0f,	0.0f, 0.0f, 1.0f,	0.0f, 0.0f,	// bottom left
-	   -0.5f,  0.5f, 0.0f,	1.0f, 1.0f, 0.0f,	0.0f, 2.0f	// top left
+	   -0.5f,  0.5f, 0.0f,	1.0f, 1.0f, 0.0f,	0.0f, 1.0f	// top left
 	};
 	unsigned int indices[] = {
 		0, 1, 3,	// first triangle
@@ -100,12 +100,12 @@ int main(void){
 	glBindTexture(GL_TEXTURE_2D, texture1); // any future GL_TEXTURE_2D operations will have effect on this texture object
 
 	// set the texture wrapping parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	// set texture filtering parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	// load image, create texture and  generate mipmaps
 	int width, height, nrChannels;
@@ -131,8 +131,8 @@ int main(void){
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	// set texture filtering parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	// load image, create texture and  generate mipmaps
 	data = stbi_load("assets/awesomeface.png", &width, &height, &nrChannels, 0);
@@ -169,8 +169,17 @@ int main(void){
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
 
+		glm::mat4 transformation = glm::mat4(1.0f);
+		transformation = glm::translate(transformation, glm::vec3(0.5f, -0.5f, 0.0f));
+		transformation = glm::rotate(transformation, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+		
+		myShader.setFloat("mixValue", mixValue);
+
 		// draws
 		myShader.use();
+		unsigned int transformLoc = glGetUniformLocation(myShader.ID, "transform");
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transformation))		;
+
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
@@ -184,4 +193,42 @@ int main(void){
 
 	glfwTerminate();
 	return 0;
+}
+
+void processInput(GLFWwindow *window){
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+	{
+		glfwSetWindowShouldClose(window, true);
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	{
+		if(wireframeMode)
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
+		else
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		}
+		wireframeMode = !wireframeMode;
+	}
+	
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+	{
+		mixValue += 0.01f;
+		if(mixValue >= 1.0f)
+			mixValue = 1.0f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	{
+		mixValue -= 0.01f;
+		if(mixValue <= 0.0f)
+			mixValue = 0.0f;
+	}
+}
+
+// whenever the window size changes (by OS or user resize) this callback function executes
+void framebuffer_size_callback(GLFWwindow* window, int width, int height){
+	glViewport(0, 0, width, height);
 }
