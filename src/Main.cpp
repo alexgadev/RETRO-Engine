@@ -9,6 +9,7 @@
 
 #include <../include/shader.h>
 #include <../include/camera.h>
+#include <../include/cube.h>
 
 #include <iostream>
 
@@ -29,8 +30,6 @@ bool firstMouse = true;
 // timing
 float deltaTime = 0.0f; // time between current frame and last frame
 float lastFrame = 0.0f;
-
-float mixValue = 0.2f;
 
 int main(void){
 	if (!glfwInit())
@@ -71,51 +70,8 @@ int main(void){
 	// build and compile the shader program
 	Shader myShader("shaders/shader.vs", "shaders/shader.fs");
 
-	// set up vertex data (and buffer(s)) and configure vertex attributes
-	float vertices[] = {
-    	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-    	 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-    	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-    	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-    	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-    	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-
-    	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-    	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-    	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-    	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-    	-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-    	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-
-    	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-    	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-    	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-    	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-    	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-    	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-    	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-    	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-    	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-    	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-    	 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-    	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-    	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-    	 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-    	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-    	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-    	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-    	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-    	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-    	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-    	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-    	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-    	-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-    	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-	};
-
+	Cube cube;
+	
 	glm::vec3 cubePositions[] = {
 		glm::vec3( 0.0f,  0.0f,  0.0f),
 		glm::vec3( 0.0f,  1.0f,  0.0f),
@@ -243,7 +199,7 @@ int main(void){
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cube.vertices), cube.vertices, GL_STATIC_DRAW);
 
 	// position attribute
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
@@ -253,22 +209,22 @@ int main(void){
 	glEnableVertexAttribArray(1);
 	
 	// --- load and create a texture ---
-	unsigned int texture1, texture2;
+	unsigned int texture1;//, texture2;
 	glGenTextures(1, &texture1);
 	glBindTexture(GL_TEXTURE_2D, texture1); // any future GL_TEXTURE_2D operations will have effect on this texture object
 
 	// set the texture wrapping parameters
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
+	
 	// set texture filtering parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
+	
 	// load image, create texture and  generate mipmaps
 	int width, height, nrChannels;
 	stbi_set_flip_vertically_on_load(true);
-	unsigned char *data = stbi_load("assets/container.jpg", &width, &height, &nrChannels, 0);
+	unsigned char *data = stbi_load("assets/grass_block.png", &width, &height, &nrChannels, 0);
 	if (data)
 	{
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -280,35 +236,9 @@ int main(void){
 	}
 	stbi_image_free(data);
 
-	// texture2
-	glGenTextures(1, &texture2);
-	glBindTexture(GL_TEXTURE_2D, texture2); // any future GL_TEXTURE_2D operations will have effect on this texture object
-
-	// set the texture wrapping parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-	// set texture filtering parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	// load image, create texture and  generate mipmaps
-	data = stbi_load("assets/awesomeface.png", &width, &height, &nrChannels, 0);
-	if (data)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cout << "Failed to load texture2" << std::endl;
-	}
-	stbi_image_free(data);
-
 	// specify for each sampler which texture unit it belongs to
-	myShader.use(); // must active the shader before doing any work at all
+	myShader.use(); // must activate the shader before doing any work at all
 	myShader.setInt("texture1", 0);
-	myShader.setInt("texture2", 1);
 
 	
 	while (!glfwWindowShouldClose(window)){
@@ -327,12 +257,9 @@ int main(void){
 		// bind texture
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture1);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, texture2);
 		
 		// activate shader
 		myShader.use();
-		myShader.setFloat("mixValue", mixValue);
 		
 		// camera/view transformations
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float) SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
@@ -350,7 +277,8 @@ int main(void){
 			
 			myShader.setMat4("model", model);
 
-			glDrawArrays(GL_TRIANGLES, 0, 36);
+			cube.draw();
+			//glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
 		// glfw: swap buffers and poll IO events
@@ -380,19 +308,6 @@ void processInput(GLFWwindow *window){
 		camera.ProcessKeyboard(UP, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		camera.ProcessKeyboard(DOWN, deltaTime);
-	
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-	{
-		mixValue += 0.01f;
-		if(mixValue >= 1.0f)
-			mixValue = 1.0f;
-	}
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-	{
-		mixValue -= 0.01f;
-		if(mixValue <= 0.0f)
-			mixValue = 0.0f;
-	}
 }
 
 // whenever the window size changes (by OS or user resize) this callback function executes
