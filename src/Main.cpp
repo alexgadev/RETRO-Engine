@@ -16,6 +16,7 @@
 void processInput(GLFWwindow *window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void generate_cube_positions_sb(glm::vec3 cubePositions[]);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -30,6 +31,9 @@ bool firstMouse = true;
 // timing
 float deltaTime = 0.0f; // time between current frame and last frame
 float lastFrame = 0.0f;
+
+// lighting
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 int main(void){
 	if (!glfwInit())
@@ -58,7 +62,6 @@ int main(void){
 	// tell GLFW to capture our mouse
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	// if (!gladLoadGL()){ // I guess it's a different way to check on the initialisation of GLAD
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
 		std::cerr << "Failed to initialize GLAD\n";
@@ -68,178 +71,34 @@ int main(void){
 	glEnable(GL_DEPTH_TEST);
 
 	// build and compile the shader program
-	Shader myShader("shaders/shader.vs", "shaders/shader.fs");
+	Shader lightingShader("shaders/shader.vs", "shaders/color_shader.fs");
+	Shader lightCubeShader("shaders/shader.vs", "shaders/lightcube_shader.fs");
 
-	Cube cube;
+	Cube cube; // only one needed, model transformations will enable multiple cubes to be created with the same instance
 	
-	glm::vec3 cubePositions[] = {
-		glm::vec3( 0.0f,  0.0f,  0.0f),
-		glm::vec3( 0.0f,  1.0f,  0.0f),
-		glm::vec3( 0.0f,  2.0f,  0.0f),
-
-		glm::vec3( 0.0f,  0.0f, -1.0f),
-		glm::vec3( 0.0f,  1.0f, -1.0f),
-		glm::vec3( 0.0f,  2.0f, -1.0f),
-
-		glm::vec3( 0.0f,  0.0f, -2.0f),
-		glm::vec3( 0.0f,  1.0f, -2.0f),
-		glm::vec3( 0.0f,  2.0f, -2.0f),
-
-
-		glm::vec3( 1.0f,  0.0f,  0.0f),
-		glm::vec3( 1.0f,  1.0f,  0.0f),
-		glm::vec3( 1.0f,  2.0f,  0.0f),
-
-		glm::vec3( 1.0f,  0.0f, -1.0f),
-		glm::vec3( 1.0f,  1.0f, -1.0f),
-		glm::vec3( 1.0f,  2.0f, -1.0f),
-
-		glm::vec3( 1.0f,  0.0f, -2.0f),
-		glm::vec3( 1.0f,  1.0f, -2.0f),
-		glm::vec3( 1.0f,  2.0f, -2.0f),
-
-
-		glm::vec3( 2.0f,  0.0f,  0.0f),
-		glm::vec3( 2.0f,  1.0f,  0.0f),
-		glm::vec3( 2.0f,  2.0f,  0.0f),
-
-		glm::vec3( 2.0f,  0.0f, -1.0f),
-		glm::vec3( 2.0f,  1.0f, -1.0f),
-		glm::vec3( 2.0f,  2.0f, -1.0f),
-
-		glm::vec3( 2.0f,  0.0f, -2.0f),
-		glm::vec3( 2.0f,  1.0f, -2.0f),
-		glm::vec3( 2.0f,  2.0f, -2.0f),
-
-
-		glm::vec3( 3.0f,  0.0f,  0.0f),
-		glm::vec3( 3.0f,  1.0f,  0.0f),
-		glm::vec3( 3.0f,  2.0f,  0.0f),
-
-		glm::vec3( 3.0f,  0.0f, -1.0f),
-		glm::vec3( 3.0f,  1.0f, -1.0f),
-		glm::vec3( 3.0f,  2.0f, -1.0f),
-
-		glm::vec3( 3.0f,  0.0f, -2.0f),
-		glm::vec3( 3.0f,  1.0f, -2.0f),
-		glm::vec3( 3.0f,  2.0f, -2.0f),
-
-
-		glm::vec3( 4.0f,  0.0f,  0.0f),
-		glm::vec3( 4.0f,  1.0f,  0.0f),
-		glm::vec3( 4.0f,  2.0f,  0.0f),
-
-		glm::vec3( 4.0f,  0.0f, -1.0f),
-		glm::vec3( 4.0f,  1.0f, -1.0f),
-		glm::vec3( 4.0f,  2.0f, -1.0f),
-
-		glm::vec3( 4.0f,  0.0f, -2.0f),
-		glm::vec3( 4.0f,  1.0f, -2.0f),
-		glm::vec3( 4.0f,  2.0f, -2.0f),
-
-
-		glm::vec3( 5.0f,  0.0f,  0.0f),
-		glm::vec3( 5.0f,  1.0f,  0.0f),
-		glm::vec3( 5.0f,  2.0f,  0.0f),
-
-		glm::vec3( 5.0f,  0.0f, -1.0f),
-		glm::vec3( 5.0f,  1.0f, -1.0f),
-		glm::vec3( 5.0f,  2.0f, -1.0f),
-
-		glm::vec3( 5.0f,  0.0f, -2.0f),
-		glm::vec3( 5.0f,  1.0f, -2.0f),
-		glm::vec3( 5.0f,  2.0f, -2.0f),
-
-		glm::vec3( 3.0f,  0.0f,  1.0f),
-		glm::vec3( 3.0f,  1.0f,  1.0f),
-		glm::vec3( 3.0f,  2.0f,  1.0f),
-
-		glm::vec3( 3.0f,  0.0f,  2.0f),
-		glm::vec3( 3.0f,  1.0f,  2.0f),
-		glm::vec3( 3.0f,  2.0f,  2.0f),
-
-		glm::vec3( 3.0f,  0.0f,  3.0f),
-		glm::vec3( 3.0f,  1.0f,  3.0f),
-		glm::vec3( 3.0f,  2.0f,  3.0f),
-
-
-		glm::vec3( 4.0f,  0.0f,  1.0f),
-		glm::vec3( 4.0f,  1.0f,  1.0f),
-		glm::vec3( 4.0f,  2.0f,  1.0f),
-
-		glm::vec3( 4.0f,  0.0f,  2.0f),
-		glm::vec3( 4.0f,  1.0f,  2.0f),
-		glm::vec3( 4.0f,  2.0f,  2.0f),
-
-		glm::vec3( 4.0f,  0.0f,  3.0f),
-		glm::vec3( 4.0f,  1.0f,  3.0f),
-		glm::vec3( 4.0f,  2.0f,  3.0f),
-
-
-		glm::vec3( 5.0f,  0.0f,  1.0f),
-		glm::vec3( 5.0f,  1.0f,  1.0f),
-		glm::vec3( 5.0f,  2.0f,  1.0f),
-
-		glm::vec3( 5.0f,  0.0f,  2.0f),
-		glm::vec3( 5.0f,  1.0f,  2.0f),
-		glm::vec3( 5.0f,  2.0f,  2.0f),
-
-		glm::vec3( 5.0f,  0.0f,  3.0f),
-		glm::vec3( 5.0f,  1.0f,  3.0f),
-		glm::vec3( 5.0f,  2.0f,  3.0f),
-
-
-		glm::vec3( 4.0f,  3.0f,  3.0f),
-	};
-
 	unsigned int VBO, VAO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 
 	glBindVertexArray(VAO);
-
+	
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cube.vertices), cube.vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cube.vertices_without_texture), cube.vertices_without_texture, GL_STATIC_DRAW);
+	
 
 	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	// texture coord attribute
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	
-	// --- load and create a texture ---
-	unsigned int texture1;//, texture2;
-	glGenTextures(1, &texture1);
-	glBindTexture(GL_TEXTURE_2D, texture1); // any future GL_TEXTURE_2D operations will have effect on this texture object
 
-	// set the texture wrapping parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	
-	// set texture filtering parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	
-	// load image, create texture and  generate mipmaps
-	int width, height, nrChannels;
-	stbi_set_flip_vertically_on_load(true);
-	unsigned char *data = stbi_load("assets/grass_block.png", &width, &height, &nrChannels, 0);
-	if (data)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cout << "Failed to load texture" << std::endl;
-	}
-	stbi_image_free(data);
+	// second cube
+	unsigned int lightCubeVAO;
+	glGenVertexArrays(1, &lightCubeVAO);
+	glBindVertexArray(lightCubeVAO);
 
-	// specify for each sampler which texture unit it belongs to
-	myShader.use(); // must activate the shader before doing any work at all
-	myShader.setInt("texture1", 0);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
 	
 	while (!glfwWindowShouldClose(window)){
 		// frame logic
@@ -250,42 +109,42 @@ int main(void){
 		// inputs
 		processInput(window);
 		
-		// rendering related
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		// bind texture
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture1);
 		
 		// activate shader
-		myShader.use();
+		lightingShader.use();
+		lightingShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+		lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 		
 		// camera/view transformations
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float) SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
-		myShader.setMat4("projection", projection);
-
 		glm::mat4 view = camera.GetViewMatrix();
-		myShader.setMat4("view", view);
+		lightingShader.setMat4("projection", projection);
+		lightingShader.setMat4("view", view);
 
-		// render container
-		glBindVertexArray(VAO);
-		for(unsigned int i = 0; i < 82; i++)
-		{
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, cubePositions[i]);
-			
-			myShader.setMat4("model", model);
+		glm::mat4 model = glm::mat4(1.0f);
+		lightingShader.setMat4("model", model);
 
-			cube.draw();
-			//glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
+		cube.draw(VAO);
+
+		// draw the lamp too
+		lightCubeShader.use();
+		lightCubeShader.setMat4("projection", projection);
+		lightCubeShader.setMat4("view", view);
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, lightPos);
+		model = glm::scale(model, glm::vec3(0.2f));
+		lightCubeShader.setMat4("model", model);
+
+		cube.draw(lightCubeVAO);
 
 		// glfw: swap buffers and poll IO events
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 	glDeleteVertexArrays(1, &VAO);
+	glDeleteVertexArrays(1, &lightCubeVAO);
 	glDeleteBuffers(1, &VBO);
 
 	glfwTerminate();
@@ -335,4 +194,31 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 	lastY = ypos;
 
 	camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+void generate_cube_positions_sb(glm::vec3 cubePositions[])
+{
+	int i = 0;
+
+	for(int x = 0; x < 6; ++x)
+	{
+		for(int z = -2; z < 1; ++z)
+		{
+			for(int y = 0; y < 3; ++y)
+			{
+				cubePositions[i++] = glm::vec3((float) x, (float) y, (float) z);
+			}
+		}
+	}
+
+	for(int x = 3; x < 6; ++x)
+	{
+		for(int z = 1; z < 4; ++z)
+		{
+			for(int y = 0; y < 3; ++y)
+			{
+				cubePositions[i++] = glm::vec3((float) x, (float) y, (float) z);
+			}
+		}
+	}
 }

@@ -1,14 +1,56 @@
 #ifndef CUBE_H
 #define CUBE_H
 
-#include <GLFW/glfw3.h>
-
-#include <vector>
+#include <glad/glad.h> // holds all OpenGL type declarations
 
 class Cube
 {
 public:
-    float vertices[180] = { // vertices positions and texture coordinates for each
+	float vertices_without_texture[180] = { // vertices positions
+    	-0.5f, -0.5f, -0.5f, 
+         0.5f, -0.5f, -0.5f,  
+         0.5f,  0.5f, -0.5f,  
+         0.5f,  0.5f, -0.5f,  
+        -0.5f,  0.5f, -0.5f, 
+        -0.5f, -0.5f, -0.5f, 
+
+        -0.5f, -0.5f,  0.5f, 
+         0.5f, -0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+        -0.5f,  0.5f,  0.5f, 
+        -0.5f, -0.5f,  0.5f, 
+
+        -0.5f,  0.5f,  0.5f, 
+        -0.5f,  0.5f, -0.5f, 
+        -0.5f, -0.5f, -0.5f, 
+        -0.5f, -0.5f, -0.5f, 
+        -0.5f, -0.5f,  0.5f, 
+        -0.5f,  0.5f,  0.5f, 
+
+         0.5f,  0.5f,  0.5f,  
+         0.5f,  0.5f, -0.5f,  
+         0.5f, -0.5f, -0.5f,  
+         0.5f, -0.5f, -0.5f,  
+         0.5f, -0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+
+        -0.5f, -0.5f, -0.5f, 
+         0.5f, -0.5f, -0.5f,  
+         0.5f, -0.5f,  0.5f,  
+         0.5f, -0.5f,  0.5f,  
+        -0.5f, -0.5f,  0.5f, 
+        -0.5f, -0.5f, -0.5f, 
+
+        -0.5f,  0.5f, -0.5f, 
+         0.5f,  0.5f, -0.5f,  
+         0.5f,  0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+        -0.5f,  0.5f,  0.5f, 
+        -0.5f,  0.5f, -0.5f, 
+	};
+
+    float vertices_with_texture[180] = { // vertices positions and texture coordinates for each
     	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
     	 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
     	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
@@ -53,8 +95,9 @@ public:
 	};
     
 
-    void draw() const
+    void draw(unsigned int VAO) const
     {
+		glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 };
