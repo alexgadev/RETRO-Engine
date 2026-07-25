@@ -29,10 +29,10 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void generate_cube_positions_sb(glm::vec3 cubePositions[]);
 unsigned int loadTexture(const char *path);
-void RenderText(unsigned int VAO, unsigned int VBO, Shader &shader, std::string text, float x, float y, float scale, glm::vec3 color);
+void RenderText(unsigned int VAO, unsigned int VBO, const Shader& shader, const std::string& text, float x, float y, float scale, glm::vec3 color);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-void RenderQuad(unsigned int VAO, unsigned int VBO, Shader &shader, unsigned int tex, float x, float y, float w, float h, glm::vec3 color, float alpha);
-void RenderTextBg(unsigned int VAO, unsigned int VBO, Shader &shader, unsigned int whiteTex, std::string text, float x, float y, float scale, glm::vec3 textColor, glm::vec3 bgColor, float bgAlpha);
+void RenderQuad(unsigned int VAO, unsigned int VBO, const Shader& shader, unsigned int tex, float x, float y, float w, float h, glm::vec3 color, float alpha);
+void RenderTextBg(unsigned int VAO, unsigned int VBO, const Shader& shader, unsigned int whiteTex, const std::string& text, float x, float y, float scale, glm::vec3 textColor, glm::vec3 bgColor, float bgAlpha);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -502,7 +502,7 @@ unsigned int loadTexture(char const * path)
     return textureID;
 }
 
-void RenderText(unsigned int VAO, unsigned int VBO, Shader &shader, std::string text, float x, float y, float scale, glm::vec3 color)
+void RenderText(unsigned int VAO, unsigned int VBO, const Shader& shader, const std::string& text, float x, float y, float scale, glm::vec3 color)
 {
     // activate corresponding render state	
     shader.use();
@@ -550,7 +550,7 @@ void RenderText(unsigned int VAO, unsigned int VBO, Shader &shader, std::string 
 
 // Draws a single solid-colored quad by reusing the text shader with a white texture.
 // alpha < 1.0 makes it translucent (the shader multiplies it into the output alpha).
-void RenderQuad(unsigned int VAO, unsigned int VBO, Shader &shader, unsigned int tex, float x, float y, float w, float h, glm::vec3 color, float alpha)
+void RenderQuad(unsigned int VAO, unsigned int VBO, const Shader& shader, unsigned int tex, float x, float y, float w, float h, glm::vec3 color, float alpha)
 {
     shader.use();
 	shader.setVec3("textColor", color.x, color.y, color.z);
@@ -581,7 +581,7 @@ void RenderQuad(unsigned int VAO, unsigned int VBO, Shader &shader, unsigned int
 
 // Draws text on top of a solid box. The box width fits the run; its height matches
 // the tallest glyph in the atlas, so every label is the same height regardless of text.
-void RenderTextBg(unsigned int VAO, unsigned int VBO, Shader &shader, unsigned int whiteTex, std::string text, float x, float y, float scale, glm::vec3 textColor, glm::vec3 bgColor, float bgAlpha)
+void RenderTextBg(unsigned int VAO, unsigned int VBO, const Shader& shader, unsigned int whiteTex, const std::string& text, float x, float y, float scale, glm::vec3 textColor, glm::vec3 bgColor, float bgAlpha)
 {
     // measure the run width (sum of pen advances, spacing included)
     float w = 0.0f;

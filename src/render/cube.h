@@ -22,7 +22,9 @@ public:
 
 private:
 	void upload();
-	void release();
+	void release(); // not const because it releases the objects linked to 
+					// m_vao, m_vbo and m_ebo, not inherently modifying them
+					// but modifying what they are linked to
 
 	GLuint m_vao = 0, m_vbo = 0, m_ebo = 0;
 
