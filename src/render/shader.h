@@ -11,8 +11,6 @@
 class Shader
 {
 public: 
-    unsigned int ID;
-
     // constructor, reads and builds the shader
     Shader(const char* vertexPath, const char* fragmentPath)
     {
@@ -83,6 +81,8 @@ public:
         glUseProgram(ID);
     }
 
+    
+
     // utility functions
     void setBool(const std::string &name, bool value) const
     {
@@ -145,6 +145,8 @@ public:
     }
 
 private:
+    unsigned int ID;
+
     // abstraction of the compilation/linking error check
     void checkCompileErrors(unsigned int shader, std::string type)
     {

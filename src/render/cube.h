@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glad/glad.h> // holds all OpenGL type declarations
-#include <array>
+#include <array> // fixed size arrays
 #include <cstdint>
 
 class Cube

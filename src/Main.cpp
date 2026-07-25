@@ -111,7 +111,7 @@ int main(void){
 	Shader textShader("shaders/textShader.vs", "shaders/textShader.fs");
 	glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f, static_cast<float>(SCR_HEIGHT));
 	textShader.use();
-	glUniformMatrix4fv(glGetUniformLocation(textShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+	textShader.setMat4("projection", projection);
 
 	Cube cube; // only one needed, model transformations will enable multiple cubes to be created with the same instance
 	
@@ -506,8 +506,8 @@ void RenderText(unsigned int VAO, unsigned int VBO, Shader &shader, std::string 
 {
     // activate corresponding render state	
     shader.use();
-    glUniform3f(glGetUniformLocation(shader.ID, "textColor"), color.x, color.y, color.z);
-    glUniform1f(glGetUniformLocation(shader.ID, "alphaMul"), 1.0f);   // glyphs: alpha comes from coverage
+	shader.setVec3("textColor", color.x, color.y, color.z);
+	shader.setFloat("alphaMul", 1.0f);   // glyphs: alpha comes from coverage
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
 
@@ -553,8 +553,8 @@ void RenderText(unsigned int VAO, unsigned int VBO, Shader &shader, std::string 
 void RenderQuad(unsigned int VAO, unsigned int VBO, Shader &shader, unsigned int tex, float x, float y, float w, float h, glm::vec3 color, float alpha)
 {
     shader.use();
-    glUniform3f(glGetUniformLocation(shader.ID, "textColor"), color.x, color.y, color.z);
-    glUniform1f(glGetUniformLocation(shader.ID, "alphaMul"), alpha);
+	shader.setVec3("textColor", color.x, color.y, color.z);
+	shader.setFloat("alphaMul", alpha);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex);
     glBindVertexArray(VAO);
