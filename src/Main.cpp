@@ -14,9 +14,9 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include <../include/shader.h>
-#include <../include/camera.h>
-#include <../include/cube.h>
+#include "render/shader.h"
+#include "render/camera.h"
+#include "render/cube.h"
 
 #include <algorithm>
 #include <iostream>
@@ -186,35 +186,6 @@ int main(void){
 	FT_Done_Face(face);
 	FT_Done_FreeType(ft);
 	
-
-	unsigned int VBO, VAO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-
-	glBindVertexArray(VAO);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cube.vertices_pnt), cube.vertices_pnt, GL_STATIC_DRAW);
-
-	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
-	// second cube
-	unsigned int lightCubeVAO;
-	glGenVertexArrays(1, &lightCubeVAO);
-	glBindVertexArray(lightCubeVAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-
 	unsigned int textVAO, textVBO;
 	glGenVertexArrays(1, &textVAO);
 	glGenBuffers(1, &textVBO);
@@ -337,7 +308,7 @@ int main(void){
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, specularMap);
 
-		cube.draw(VAO);
+		cube.draw();
 
 		// draw the lamp too
 		lightCubeShader.use();
@@ -348,7 +319,7 @@ int main(void){
 		model = glm::scale(model, glm::vec3(0.2f));
 		lightCubeShader.setMat4("model", model);
 
-		cube.draw(lightCubeVAO);
+		cube.draw();
 
 		renderMs = (glfwGetTime() - renderStart) * 1000.0;  // 3D scene only (HUD excluded)
 
@@ -409,10 +380,6 @@ int main(void){
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteVertexArrays(1, &lightCubeVAO);
-	glDeleteBuffers(1, &VBO);
-
 	glfwTerminate();
 	return 0;
 }
