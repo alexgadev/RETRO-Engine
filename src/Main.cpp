@@ -1,4 +1,4 @@
-#include <charconv>
+#include "render/mesh.h"
 #include <cstddef>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -16,9 +16,8 @@
 
 #include "render/shader.h"
 #include "render/camera.h"
-#include "render/cube.h"
+#include "render/mesh.h"
 
-#include <algorithm>
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -113,7 +112,7 @@ int main(void){
 	textShader.use();
 	textShader.setMat4("projection", projection);
 
-	Cube cube; // only one needed, model transformations will enable multiple cubes to be created with the same instance
+	Mesh cube = Mesh::createCube(); // only one needed, model transformations will enable multiple cubes to be created with the same instance
 	
 	FT_Library ft;
 	if (FT_Init_FreeType(&ft))
