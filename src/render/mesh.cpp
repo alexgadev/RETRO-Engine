@@ -66,25 +66,47 @@ void Mesh::draw() const
 
 Mesh Mesh::createCube()
 {
-    static constexpr std::array<float, 8 * 8> s_vertices = {
-		-0.5f,-0.5f,-0.5f,  0,0,-1,  0,0,
-        0.5f,-0.5f,-0.5f,  0,0,-1,  1,0,
-    	0.5f, 0.5f,-0.5f,  0,0,-1,  1,1,
-        -0.5f, 0.5f,-0.5f,  0,0,-1,  0,1,
-        -0.5f,-0.5f, 0.5f,  0,0, 1,  0,0,
-         0.5f,-0.5f, 0.5f,  0,0, 1,  1,0,
-         0.5f, 0.5f, 0.5f,  0,0, 1,  1,1,
-        -0.5f, 0.5f, 0.5f,  0,0, 1,  0,1,
+    static constexpr std::array<float, 24 * 8> s_vertices = {
+		// positions          // normals           // texture coords
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f
 	};
 
-	static constexpr std::array<std::uint32_t, 36> s_indices = {
-		0,1,2, 2,3,0,       // back
-        4,5,6, 6,7,4,       // front
-        4,0,3, 3,7,4,       // left
-        1,5,6, 6,2,1,       // right
-        0,1,5, 5,4,0,       // bottom
-        3,2,6, 6,7,3        // top
-	};
+	static constexpr std::array<uint32_t, 36> s_indices = {
+        0, 1, 2,  2, 3, 0,        // back   (vertices 0-3)
+        4, 5, 6,  6, 7, 4,        // front  (vertices 4-7)
+        8, 9, 10, 10, 11, 8,      // left   (vertices 8-11)
+        12, 13, 14, 14, 15, 12,   // right  (vertices 12-15)
+        16, 17, 18, 18, 19, 16,   // bottom (vertices 16-19)
+        20, 21, 22, 22, 23, 20    // top    (vertices 20-23)
+    };
 
     Mesh cube(std::vector<float>(s_vertices.begin(), s_vertices.end()), 
                 std::vector<uint32_t>(s_indices.begin(), s_indices.end()));
