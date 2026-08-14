@@ -1,5 +1,6 @@
 #include "text_renderer.h"
 
+#include <GL/gl.h>
 #include <glad/glad.h>
 
 #include <ft2build.h>
@@ -29,16 +30,37 @@ TextRenderer::TextRenderer(unsigned int scr_width, unsigned int scr_height, cons
 TextRenderer::~TextRenderer() { release(); }
 
 TextRenderer::TextRenderer(TextRenderer&& o) noexcept
-    : Characters(std::move(o.Characters)), m_shader(std::move(o.m_shader))
+    : Characters(std::move(o.Characters)), 
+      m_shader(std::move(o.m_shader)),
+      glyphMaxAscent(o.glyphMaxAscent),
+      glyphMaxDescent(o.glyphMaxDescent),
+      m_vao(o.m_vao), m_vbo(o.m_vbo)
+{
+    o.m_vao = o.m_vbo = 0;
+}
+
+TextRenderer& TextRenderer::operator=(TextRenderer&& o) noexcept
 {
     if(this != &o){
         release();
         m_vao = o.m_vao; m_vbo = o.m_vbo; glyphMaxAscent = o.glyphMaxAscent; glyphMaxDescent = o.glyphMaxDescent;
         o.m_vao = o.m_vbo = o.glyphMaxAscent = o.glyphMaxDescent = 0;
+        Characters = std::move(o.Characters);
+        m_shader = std::move(o.m_shader);
     }
     return *this;
 }
 
+void TextRenderer::release()
+{
+    for(auto& kv : Characters){
+        glDeleteTextures(1, &kv.second.TextureID);
+    }
+    Characters.clear();
+
+    if (m_vbo) glDeleteBuffers(1, &m_vbo);
+    if (m_vao) glDeleteVertexArrays(1, &m_vao);
+}
 
 void TextRenderer::loadFont(const char* path, int pixelSize)
 {
@@ -114,8 +136,6 @@ void TextRenderer::loadFont(const char* path, int pixelSize)
     FT_Done_FreeType(ft);
 }
 
-
-
 void TextRenderer::drawText(const std::string& text, float x, float y, float scale, glm::vec3 color) const
 {
     // activate corresponding render state	
@@ -123,7 +143,7 @@ void TextRenderer::drawText(const std::string& text, float x, float y, float sca
 	shader.setVec3("textColor", color.x, color.y, color.z);
 	shader.setFloat("alphaMul", 1.0f);   // glyphs: alpha comes from coverage
     glActiveTexture(GL_TEXTURE0);
-    glBindVertexArray(VAO);
+    glBindVertexArray(m_vao);
 
     // iterate through all characters
     std::string::const_iterator c;
@@ -149,7 +169,7 @@ void TextRenderer::drawText(const std::string& text, float x, float y, float sca
         // render glyph texture over quad
         glBindTexture(GL_TEXTURE_2D, ch.TextureID);
         // update content of VBO memory
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices); // be sure to use glBufferSubData and not glBufferData
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -160,4 +180,28 @@ void TextRenderer::drawText(const std::string& text, float x, float y, float sca
     }
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+float TextRenderer::measureText(const std::string& text, float scale) const
+{
+    float w = 0.0f;
+    for (char c : text)
+        w += (Characters[c].Advance >> 6) * scale;
+    return w;
+}
+
+float TextRenderer::getAscent(float scale) const
+{
+    return glyphMaxAscent * scale;
+}
+
+float TextRenderer::getDescent(float scale) const
+{
+    return glyphMaxDescent * scale;
+}
+
+void TextRenderer::setProjection(unsigned int width, unsigned int height)
+{
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float) width / height, 0.1f, 100.0f);
+	m_shader.setMat4("projection", projection);
 }
