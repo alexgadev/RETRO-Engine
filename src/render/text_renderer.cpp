@@ -1,12 +1,15 @@
 #include "text_renderer.h"
 
-#include <GL/gl.h>
 #include <glad/glad.h>
+
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
 #include <iostream>
+#include <algorithm>
+#include <stdexcept>
 
 
 TextRenderer::TextRenderer(unsigned int scr_width, unsigned int scr_height, const char* path, const char* vertexShader, const char* fragmentShader, int pixelSize)
@@ -16,7 +19,7 @@ TextRenderer::TextRenderer(unsigned int scr_width, unsigned int scr_height, cons
 
 	glGenVertexArrays(1, &m_vao);
 	glGenBuffers(1, &m_vbo);
-	glBindVertexArray(textVAO);
+	glBindVertexArray(m_vao);
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(0);
@@ -24,7 +27,7 @@ TextRenderer::TextRenderer(unsigned int scr_width, unsigned int scr_height, cons
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-    setProjection(scr_height, scr_height);
+    setProjection(scr_width, scr_height);
 }
 
 TextRenderer::~TextRenderer() { release(); }
@@ -44,7 +47,7 @@ TextRenderer& TextRenderer::operator=(TextRenderer&& o) noexcept
     if(this != &o){
         release();
         m_vao = o.m_vao; m_vbo = o.m_vbo; glyphMaxAscent = o.glyphMaxAscent; glyphMaxDescent = o.glyphMaxDescent;
-        o.m_vao = o.m_vbo = o.glyphMaxAscent = o.glyphMaxDescent = 0;
+        o.m_vao = o.m_vbo = 0;
         Characters = std::move(o.Characters);
         m_shader = std::move(o.m_shader);
     }
@@ -75,6 +78,7 @@ void TextRenderer::loadFont(const char* path, int pixelSize)
     if (FT_New_Face(ft, path, 0, &face))
     {
         std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
+        FT_Done_FreeType(ft);
         return;
     }
     else {
@@ -139,44 +143,50 @@ void TextRenderer::loadFont(const char* path, int pixelSize)
 void TextRenderer::drawText(const std::string& text, float x, float y, float scale, glm::vec3 color) const
 {
     // activate corresponding render state	
-    shader.use();
-	shader.setVec3("textColor", color.x, color.y, color.z);
-	shader.setFloat("alphaMul", 1.0f);   // glyphs: alpha comes from coverage
+    m_shader.use();
+	m_shader.setVec3("textColor", color.x, color.y, color.z);
+	m_shader.setFloat("alphaMul", 1.0f);   // glyphs: alpha comes from coverage
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(m_vao);
 
     // iterate through all characters
-    std::string::const_iterator c;
-    for (c = text.begin(); c != text.end(); c++) 
+    for (char c : text) 
     {
-        Character ch = Characters[*c];
+        try
+        {
+            Character ch = Characters.at(c);
 
-        float xpos = x + ch.Bearing.x * scale;
-        float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
+            float xpos = x + ch.Bearing.x * scale;
+            float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
 
-        float w = ch.Size.x * scale;
-        float h = ch.Size.y * scale;
-        // update VBO for each character
-        float vertices[6][4] = {
-            { xpos,     ypos + h,   0.0f, 0.0f },            
-            { xpos,     ypos,       0.0f, 1.0f },
-            { xpos + w, ypos,       1.0f, 1.0f },
+            float w = ch.Size.x * scale;
+            float h = ch.Size.y * scale;
+            // update VBO for each character
+            float vertices[6][4] = {
+                { xpos,     ypos + h,   0.0f, 0.0f },            
+                { xpos,     ypos,       0.0f, 1.0f },
+                { xpos + w, ypos,       1.0f, 1.0f },
 
-            { xpos,     ypos + h,   0.0f, 0.0f },
-            { xpos + w, ypos,       1.0f, 1.0f },
-            { xpos + w, ypos + h,   1.0f, 0.0f }           
-        };
-        // render glyph texture over quad
-        glBindTexture(GL_TEXTURE_2D, ch.TextureID);
-        // update content of VBO memory
-        glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices); // be sure to use glBufferSubData and not glBufferData
+                { xpos,     ypos + h,   0.0f, 0.0f },
+                { xpos + w, ypos,       1.0f, 1.0f },
+                { xpos + w, ypos + h,   1.0f, 0.0f }           
+            };
+            // render glyph texture over quad
+            glBindTexture(GL_TEXTURE_2D, ch.TextureID);
+            // update content of VBO memory
+            glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices); // be sure to use glBufferSubData and not glBufferData
 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        // render quad
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-        x += (ch.Advance >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            // render quad
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+            x += (ch.Advance >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
+        }
+        catch(std::out_of_range& e)
+        {
+            std::cout << "ERROR::FONT::CHARACTER_NOT_FOUND: " << e.what() << std::endl;
+        }
     }
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -186,7 +196,16 @@ float TextRenderer::measureText(const std::string& text, float scale) const
 {
     float w = 0.0f;
     for (char c : text)
-        w += (Characters[c].Advance >> 6) * scale;
+    {
+        try 
+        {
+            w += (Characters.at(c).Advance >> 6) * scale;
+        } 
+        catch(std::out_of_range& e)
+        {
+            std::cout << "ERROR::FONT::CHARACTER_NOT_FOUND: " << e.what() << std::endl;
+        }
+    }
     return w;
 }
 
@@ -202,6 +221,7 @@ float TextRenderer::getDescent(float scale) const
 
 void TextRenderer::setProjection(unsigned int width, unsigned int height)
 {
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float) width / height, 0.1f, 100.0f);
+    glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height));
+    m_shader.use();
 	m_shader.setMat4("projection", projection);
 }
