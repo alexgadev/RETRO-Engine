@@ -48,12 +48,14 @@ class HUD
         void setBgRenderColor(glm::vec3 color);
         void setBgTickColor(glm::vec3 color);
     private:
-        unsigned int m_vao = 0, m_vbo = 0;
+        unsigned int m_vao = 0, m_vbo = 0, m_quadTex;
         bool showHud = true;
         
         Shader m_shader;
 
         TextRenderer m_text_renderer;
+        
+        static unsigned int m_scr_height, m_scr_width;
 
         // Accumulators
         double hudTimer = 0.0, accFrameMs = 0.0, accUpdateMs = 0.0, accRenderMs = 0.0, accTickMs = 0.0;
@@ -62,9 +64,9 @@ class HUD
         double dispFrameMs = 0.0, dispUpdateMs = 0.0, dispRenderMs = 0.0, dispTickMs = 0.0, dispFps = 0.0;
         // Config
         static constexpr double HUD_REFRESH = 0.25;    // seconds between on-screen text updates
-        float scale = 0.25f;                // text scale
-        float step = 16.0f;                 // vertical spacing between lines
-        float alpha = 1.0f;                 // background opacity
+        float m_scale = 0.25f;                // text scale
+        float m_step = 16.0f;                 // vertical spacing between lines
+        float m_alpha = 1.0f;                 // background opacity
 
         // Background colors
         glm::vec3 bgFps   {0.90f, 0.52f, 0.15f};  // amber
