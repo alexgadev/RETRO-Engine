@@ -5,17 +5,10 @@
 
 WindowHandler::WindowHandler(const char* title, unsigned int width, unsigned int height)
 {
-    if (!glfwInit())
-	{
-		std::cerr << "Failed to init GLFW\n";
-        errors = true;
-		return;
-	} 
-
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
+    
     m_scr_width = width;
     m_scr_height = height;
 
@@ -23,7 +16,6 @@ WindowHandler::WindowHandler(const char* title, unsigned int width, unsigned int
 	if (!m_window)
 	{
 		std::cerr << "Failed to create window\n";
-		errors = true;
 		return;
 	}
 
@@ -32,7 +24,7 @@ WindowHandler::WindowHandler(const char* title, unsigned int width, unsigned int
 
 WindowHandler::~WindowHandler()
 {
-    glfwDestroyWindow(m_window);
+    if(m_window) glfwDestroyWindow(m_window);
 }
 
 WindowHandler::WindowHandler(WindowHandler&& o) noexcept
@@ -45,7 +37,7 @@ WindowHandler::WindowHandler(WindowHandler&& o) noexcept
 WindowHandler& WindowHandler::operator=(WindowHandler&& o) noexcept
 {
     if(this != &o){
-        glfwTerminate();
+        if(m_window) glfwDestroyWindow(m_window);
         m_scr_width = o.m_scr_width; m_scr_height = o.m_scr_height;
         m_window = o.m_window;
         o.m_window = nullptr;
@@ -53,7 +45,7 @@ WindowHandler& WindowHandler::operator=(WindowHandler&& o) noexcept
     return *this;
 }
 
-bool WindowHandler::isValid() const { return !errors; }
+bool WindowHandler::isValid() const { return m_window != nullptr; }
 GLFWwindow* WindowHandler::getHandle() const { return m_window; }
 unsigned int WindowHandler::getWidth() const { return m_scr_width; }
 unsigned int WindowHandler::getHeight() const { return m_scr_height; }

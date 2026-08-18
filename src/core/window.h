@@ -31,6 +31,4 @@ class WindowHandler
         unsigned int m_scr_height;
 
         GLFWwindow* m_window = nullptr;
-
-        bool errors = false;
 };
