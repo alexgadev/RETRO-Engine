@@ -79,9 +79,9 @@ public:
 
         Position.y = lastY;
         if (direction == UP)
-            Position.y += SENSITIVITY;
+            Position.y += velocity;
         if (direction == DOWN)
-            Position.y -= SENSITIVITY;
+            Position.y -= velocity;
     }
 
     void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
