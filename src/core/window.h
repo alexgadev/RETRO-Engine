@@ -16,15 +16,21 @@ class WindowHandler
         bool isValid() const;
 
         GLFWwindow* getHandle() const;
+        unsigned int getWidth() const;
+        unsigned int getHeight() const;
+
+        void setSize(unsigned int width, unsigned int height);
 
         bool shouldClose() const; 
-        void swapBuffers();
-        void pollEvents();
-        void close();
+        void swapBuffers() const;
+        void pollEvents() const;
+        void close() const;
 
     private:
         unsigned int m_scr_width;
         unsigned int m_scr_height;
 
-        GLFWwindow* m_window;
+        GLFWwindow* m_window = nullptr;
+
+        bool errors = false;
 };
