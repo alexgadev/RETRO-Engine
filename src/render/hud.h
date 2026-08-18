@@ -47,15 +47,17 @@ class HUD
         void setBgUpdateColor(glm::vec3 color);
         void setBgRenderColor(glm::vec3 color);
         void setBgTickColor(glm::vec3 color);
+
+        void setProjection(unsigned int width, unsigned int height);
     private:
-        unsigned int m_vao = 0, m_vbo = 0, m_quadTex;
+        unsigned int m_vao = 0, m_vbo = 0;
         bool showHud = true;
         
         Shader m_shader;
 
         TextRenderer m_text_renderer;
         
-        static unsigned int m_scr_height, m_scr_width;
+        unsigned int m_scr_width, m_scr_height;
 
         // Accumulators
         double hudTimer = 0.0, accFrameMs = 0.0, accUpdateMs = 0.0, accRenderMs = 0.0, accTickMs = 0.0;
