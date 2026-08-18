@@ -1,4 +1,3 @@
-#include <cstddef>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -16,6 +15,7 @@
 #include "render/hud.h"
 
 #include <iostream>
+#include <cmath>
 #include <sstream>
 #include <string>
 
@@ -35,11 +35,6 @@ float lastX = SCR_WIDTH / 2.0;
 float lastY = SCR_HEIGHT / 2.0;
 bool firstMouse = true;
 
-// HUD
-HUD hudController(SCR_WIDTH, SCR_HEIGHT,
-					"resources/fonts/Antonio-Bold.ttf", 
-					"shaders/textShader.vs", "shaders/textShader.fs",
-					"shaders/hudShader.vs", "shaders/hudShader.fs");
 
 // timing
 float deltaTime = 0.0f; // time between current frame and last frame
@@ -87,13 +82,21 @@ int main(void){
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	// HUD
+	HUD hudController(SCR_WIDTH, SCR_HEIGHT,
+						"resources/fonts/Antonio-Bold.ttf", 
+						"shaders/textShader.vs", "shaders/textShader.fs",
+						"shaders/hudShader.vs", "shaders/hudShader.fs");
+
+	glfwSetWindowUserPointer(window, &hudController);
+
 	// build and compile the shader program
 	Shader lightingShader("shaders/shader.vs", "shaders/color_shader.fs");
 	Shader lightCubeShader("shaders/light_cube.vs", "shaders/lightcube_shader.fs");
 
-	TextRenderer textRenderer(SCR_WIDTH, SCR_HEIGHT,
-							"resources/fonts/Antonio-Bold.ttf", 
-							"shaders/textShader.vs", "shaders/textShader.fs");
+	//TextRenderer textRenderer(SCR_WIDTH, SCR_HEIGHT,
+	//						"resources/fonts/Antonio-Bold.ttf", 
+	//						"shaders/textShader.vs", "shaders/textShader.fs");
 
 	Mesh cube = Mesh::createCube(); // only one needed, model transformations will enable multiple cubes to be created with the same instance
 
@@ -113,16 +116,14 @@ int main(void){
 	// ---- per-frame metrics (milliseconds), measured every frame ----
 	double frameMs = 0.0, updateMs = 0.0, renderMs = 0.0;
 
-	// ---- HUD readout: averaged over a fixed window so the numbers hold still
-	//      long enough to read (raw per-frame values change too fast) ----
-	const double HUD_REFRESH = 0.25;   // seconds between on-screen text updates
-	double hudTimer   = 0.0;          // real time elapsed since the last refresh
-	double accFrameMs = 0.0, accUpdateMs = 0.0, accRenderMs = 0.0, accTickMs = 0.0;
-	int    frameCount = 0, tickCount = 0;   // samples gathered during this window
-	double dispFrameMs = 0.0, dispUpdateMs = 0.0, dispRenderMs = 0.0, dispTickMs = 0.0, dispFps = 0.0;
-
+	
 	lastFrame = static_cast<float>(glfwGetTime());
 	while (!glfwWindowShouldClose(window)){
+		// ---- HUD readout: averaged over a fixed window so the numbers hold still
+		//      long enough to read (raw per-frame values change too fast) ----
+		double accTickMs = 0.0;
+		int    tickCount = 0;
+
 		// ============================== FRAME TIMING ==============================
 		// Total wall-clock time the *previous* frame took (frame-to-frame).
 		// deltaTime is the master clock every other phase is measured against; a
@@ -249,7 +250,10 @@ void processInput(GLFWwindow *window){
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (key == GLFW_KEY_F3 && action == GLFW_PRESS)
-		hudController.toggle();
+	{
+		auto* hud = static_cast<HUD*>(glfwGetWindowUserPointer(window));
+		if(hud) hud -> toggle();
+	}
 }
 
 // whenever the window size changes (by OS or user resize) this callback function executes
