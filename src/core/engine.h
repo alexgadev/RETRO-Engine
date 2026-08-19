@@ -3,9 +3,18 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+
 #include "window.h"
 #include "../render/hud.h"
 #include "../render/camera.h"
+
+
+// this exists only to guarantee teardown order
+struct GlfwTerminator
+{
+    ~GlfwTerminator() { glfwTerminate(); }
+};
 
 class Engine
 {
@@ -38,12 +47,22 @@ class Engine
     private:
         void processInput();
 
+        // helper functions called inside the initializer list. both are hard-exits in case of wrong initialization
+        static bool initGlfw();
+        static bool initGlad();
+
         // all the GLFW function callbacks that were declared on main
         static void onKey(GLFWwindow* window, int key, int scancode, int action, int mods);
         static void onMouseMove(GLFWwindow* window, double xpos, double ypos);
         static void onFramebufferSize(GLFWwindow* window, int width, int height);
 
+        // the statics above only get a GLFWwindow*, they fetch the Engine from the window user pointer and forward to these
+        void handleKey(int key, int action);
+        void handleMouseMove(float xpos, float ypos);
+        void handleResize(int width, int height);
+
         // declaration order matters!!!
+        GlfwTerminator m_terminator;
         bool m_glfwReady;
         WindowHandler m_windowController;
         bool m_gladReady;
