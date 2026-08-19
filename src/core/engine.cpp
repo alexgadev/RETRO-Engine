@@ -33,6 +33,8 @@ Engine::Engine(const char* title, unsigned int width, unsigned int height)
 
 void Engine::run()
 {
+    onInit();
+
     while (!m_windowController.shouldClose()){
 		// ---- HUD readout: averaged over a fixed window so the numbers hold still
 		//      long enough to read (raw per-frame values change too fast) ----
@@ -61,8 +63,7 @@ void Engine::run()
 			double tickStart = glfwGetTime();
 
 			m_simTime += FIXED_DT;                  // advance the deterministic sim clock
-			//lightPos.x = sin(simTime) * 2.0f;     // world state mutated per tick
-			//lightPos.z = cos(simTime) * 2.0f;
+
             onUpdate(FIXED_DT);
 
 			m_accumulator -= FIXED_DT;
@@ -99,7 +100,7 @@ void Engine::run()
 	}
 }
 
-Camera& Engine::camera() { return *m_camera; }
+Camera& Engine::camera() { return m_camera; }
 const WindowHandler& Engine::window() const { return m_windowController; }
 float Engine::deltaTime() const { return m_deltaTime; }
 
@@ -115,19 +116,19 @@ glm::mat4 Engine::viewMatrix() const { return m_camera.GetViewMatrix(); }
 
 void Engine::processInput()
 {
-    if (glfwGetKey(m_windowController, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(m_windowController, true);
-	if (glfwGetKey(m_windowController, GLFW_KEY_W) == GLFW_PRESS)
+    if (glfwGetKey(m_windowController.getHandle(), GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(m_windowController.getHandle(), true);
+	if (glfwGetKey(m_windowController.getHandle(), GLFW_KEY_W) == GLFW_PRESS)
 		m_camera.ProcessKeyboard(FORWARD, m_deltaTime);
-	if (glfwGetKey(m_windowController, GLFW_KEY_S) == GLFW_PRESS)
+	if (glfwGetKey(m_windowController.getHandle(), GLFW_KEY_S) == GLFW_PRESS)
 		m_camera.ProcessKeyboard(BACKWARD, m_deltaTime);
-	if (glfwGetKey(m_windowController, GLFW_KEY_A) == GLFW_PRESS)
+	if (glfwGetKey(m_windowController.getHandle(), GLFW_KEY_A) == GLFW_PRESS)
 		m_camera.ProcessKeyboard(LEFT, m_deltaTime);
-	if (glfwGetKey(m_windowController, GLFW_KEY_D) == GLFW_PRESS)
+	if (glfwGetKey(m_windowController.getHandle(), GLFW_KEY_D) == GLFW_PRESS)
 		m_camera.ProcessKeyboard(RIGHT, m_deltaTime);
-	if (glfwGetKey(m_windowController, GLFW_KEY_SPACE) == GLFW_PRESS)
+	if (glfwGetKey(m_windowController.getHandle(), GLFW_KEY_SPACE) == GLFW_PRESS)
 		m_camera.ProcessKeyboard(UP, m_deltaTime);
-	if (glfwGetKey(m_windowController, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+	if (glfwGetKey(m_windowController.getHandle(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		m_camera.ProcessKeyboard(DOWN, m_deltaTime);
 }
 
@@ -136,7 +137,7 @@ bool Engine::initGlfw()
     if (!glfwInit())
 	{
 		std::cerr << "Failed to init GLFW\n";
-		return false;
+		std::exit(-1);
 	} 
     return true;
 }
@@ -146,7 +147,7 @@ bool Engine::initGlad()
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
 		std::cerr << "Failed to initialize GLAD\n";
-		return false;
+		std::exit(-1);
 	} 
     return true;
 }
