@@ -75,3 +75,9 @@ errors.
 | Mouse | Look |
 | `F3` | Toggle the debug HUD |
 | `Esc` | Quit |
+
+## Third-party libraries
+
+This project uses several third-party libraries. See
+[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for their respective
+licenses and copyright notices.
